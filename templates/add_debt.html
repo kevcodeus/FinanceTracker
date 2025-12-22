@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="space-y-8 fade-in">
+    <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-4">
+            <a href="{{ url_for('index') }}" class="text-2xl text-slate-400">←</a>
+            <h1 class="text-2xl font-black text-slate-900">Lent & Borrow</h1>
+        </div>
+        <a href="{{ url_for('tracking') }}" class="text-[10px] font-black text-indigo-600 bg-indigo-50 px-3 py-2 rounded-xl uppercase">History 📊</a>
+    </div>
+    
+    <form action="{{ url_for('add_debt') }}" method="POST" class="space-y-4 bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm">
+        <div>
+            <label class="text-[10px] font-black text-slate-400 uppercase ml-2 mb-1 block">Person Name</label>
+            <input type="text" name="person_name" placeholder="Who?" class="w-full p-4 bg-slate-50 rounded-2xl outline-none border border-transparent focus:border-indigo-500 transition-all" required>
+        </div>
+        
+        <div>
+            <label class="text-[10px] font-black text-slate-400 uppercase ml-2 mb-1 block">Amount</label>
+            <input type="number" step="0.01" name="amount" placeholder="0.00" class="w-full p-4 bg-slate-50 rounded-2xl outline-none border border-transparent focus:border-indigo-500 transition-all" required>
+        </div>
+
+        <div>
+            <label class="text-[10px] font-black text-slate-400 uppercase ml-2 mb-1 block">Transaction Type</label>
+            <select name="type" class="w-full p-4 bg-slate-50 rounded-2xl outline-none border border-transparent focus:border-indigo-500 appearance-none bg-no-repeat bg-[right_1rem_center]">
+                <option value="borrow">I Borrowed (Increases Cash)</option>
+                <option value="lent">I Lent (Decreases Cash)</option>
+            </select>
+        </div>
+
+        <button type="submit" class="w-full btn-primary text-white p-5 rounded-2xl font-black shadow-lg shadow-indigo-200 active:scale-95 transition-transform">
+            Add Transaction
+        </button>
+    </form>
+
+    <div class="space-y-4">
+        <h3 class="font-bold text-slate-800 text-sm uppercase tracking-wider ml-1">People to Settle With</h3>
+        
+        {% if not debts %}
+        <div class="text-center py-10 bg-slate-50 rounded-[32px] border-2 border-dashed border-slate-200">
+            <p class="text-slate-400 text-sm font-medium">No active debts!</p>
+        </div>
+        {% endif %}
+
+        {% for debt in debts %}
+        <div class="flex items-center justify-between p-5 bg-white border border-slate-100 rounded-[28px] shadow-sm">
+            <div class="flex items-center space-x-4">
+                <div class="w-12 h-12 flex items-center justify-center rounded-2xl text-xl 
+                    {% if debt.amount > 0 %}bg-red-50 text-red-500{% else %}bg-emerald-50 text-emerald-500{% endif %}">
+                    {{ '🤝' if debt.amount > 0 else '💸' }}
+                </div>
+                <div>
+                    <p class="font-black text-slate-800 text-base">{{ debt.person_name }}</p>
+                    <p class="text-[10px] font-black uppercase tracking-tighter
+                        {% if debt.amount > 0 %}text-red-400{% else %}text-emerald-500{% endif %}">
+                        {{ 'You Owe' if debt.amount > 0 else 'They Owe You' }}
+                    </p>
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-4">
+                <div class="text-right">
+                    <p class="font-black text-slate-900 text-lg">${{ "{:,.2f}".format(debt.amount|abs) }}</p>
+                </div>
+                
+                <form action="{{ url_for('settle_debt', debt_id=debt['id']) }}" method="POST">
+                    <button type="submit" class="w-10 h-10 bg-slate-900 text-white rounded-xl flex items-center justify-center shadow-md active:scale-90 transition-all">
+                        ✓
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

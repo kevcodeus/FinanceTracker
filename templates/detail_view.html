@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="space-y-6 fade-in pb-20">
+    {# --- FRONTEND LOGIC START --- #}
+    {% set month_map = {
+        '01': 'January', '02': 'February', '03': 'March', '04': 'April', 
+        '05': 'May', '06': 'June', '07': 'July', '08': 'August', 
+        '09': 'September', '10': 'October', '11': 'November', '12': 'December'
+    } %}
+
+    {# We assume the title passed from backend is 'Report: 01-2025' or we use month_id #}
+    {# Let's extract the month and year from the month_id variable #}
+    {% if month_id %}
+        {% set m_num = month_id.split('-')[0] %}
+        {% set y_num = month_id.split('-')[1] %}
+        {% set display_title = month_map[m_num] ~ " " ~ y_num %}
+    {% else %}
+        {% set display_title = title %}
+    {% endif %}
+    {# --- FRONTEND LOGIC END --- #}
+
+    <div class="flex items-center justify-between">
+        <a href="{{ url_for('tracking') }}" class="w-10 h-10 bg-white rounded-xl flex items-center justify-center border border-slate-100 shadow-sm text-slate-400">
+            ←
+        </a>
+        <h1 class="text-xl font-black text-slate-900">{{ display_title }}</h1>
+        <div class="w-10"></div> </div>
+
+    <div class="btn-primary p-8 rounded-[35px] text-white shadow-xl relative overflow-hidden">
+        <div class="absolute -right-5 -bottom-5 w-32 h-32 bg-white/10 rounded-full"></div>
+        <p class="text-indigo-100 text-[10px] font-black uppercase tracking-widest">Total Monthly Spend</p>
+        <h2 class="text-4xl font-black mt-1">${{ "{:,.2f}".format(total) }}</h2>
+        
+        <div class="mt-6 inline-flex items-center px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-[10px] font-bold">
+            <span class="mr-2">📈</span> Analysis for {{ display_title }}
+        </div>
+    </div>
+
+    <div class="space-y-4">
+        <div class="flex justify-between items-center px-1">
+            <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Transaction List</h3>
+            <span class="text-[10px] font-bold text-slate-300">{{ expenses|length }} Items</span>
+        </div>
+
+        {% if not expenses %}
+        <div class="text-center py-12 bg-white rounded-[30px] border border-dashed border-slate-200">
+            <p class="text-slate-400 text-sm">No transactions found for this month.</p>
+        </div>
+        {% endif %}
+
+        {% for exp in expenses %}
+        <div class="flex items-center justify-between p-5 bg-white border border-slate-50 rounded-[28px] shadow-sm">
+            <div class="flex items-center space-x-4">
+                <div class="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-xl">
+                    💸
+                </div>
+                <div>
+                    <p class="font-bold text-slate-800 text-sm">{{ exp.description }}</p>
+                    <p class="text-[10px] text-slate-400 font-bold uppercase">{{ exp.date[:10] }}</p>
+                </div>
+            </div>
+            <p class="font-black text-slate-900">-${{ "{:,.2f}".format(exp.amount) }}</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

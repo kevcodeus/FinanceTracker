@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="space-y-8 px-4">
+    <div class="flex items-center space-x-4">
+        <a href="{{ url_for('index') }}" class="text-2xl text-slate-400">←</a>
+        <h1 class="text-2xl font-black text-slate-900">Manage Accounts</h1>
+    </div>
+
+    <div class="bg-white p-6 rounded-[30px] border border-slate-100 shadow-sm">
+        <form action="{{ url_for('add_balance') }}" method="POST" class="space-y-4">
+            <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">New Account</p>
+            <input type="text" name="account_name" placeholder="Account Name (e.g. HDFC)" 
+                   class="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none focus:ring-2 focus:ring-indigo-500/20" required>
+            <input type="number" step="0.01" name="amount" placeholder="Initial Balance" 
+                   class="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none focus:ring-2 focus:ring-indigo-500/20" required>
+            <button type="submit" class="w-full bg-indigo-600 text-white p-4 rounded-2xl font-bold shadow-lg shadow-indigo-100 active:scale-95 transition-transform">
+                Save Account
+            </button>
+        </form>
+    </div>
+
+    <div class="space-y-4">
+        <h3 class="font-bold text-slate-800 text-sm uppercase tracking-wider ml-1">Your Accounts</h3>
+        <div class="grid grid-cols-1 gap-4">
+            {% for bal in balances %}
+            <div class="bg-white p-5 rounded-[28px] border border-slate-100 shadow-sm">
+                <div id="view-{{ bal.id }}" class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center font-black text-indigo-600">
+                            {{ bal.account_name[0]|upper }}
+                        </div>
+                        <div>
+                            <p class="font-bold text-slate-800">{{ bal.account_name }}</p>
+                            <p class="text-xs font-bold text-indigo-600">₹{{ "{:,.2f}".format(bal.amount) }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex space-x-2">
+                        <button onclick="toggleEdit('{{ bal.id }}')" class="p-2 text-slate-400 hover:text-indigo-600 transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                            </svg>
+                        </button>
+                        <form action="{{ url_for('delete_balance', id=bal.id) }}" method="POST" onsubmit="return confirm('Delete this account?');">
+                            <button type="submit" class="p-2 text-slate-300 hover:text-red-500 transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <form id="edit-{{ bal.id }}" action="{{ url_for('edit_balance', id=bal.id) }}" method="POST" class="hidden space-y-3">
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="text" name="account_name" value="{{ bal.account_name }}" 
+                               class="p-3 bg-slate-50 rounded-xl border-none outline-none text-sm font-bold" required>
+                        <input type="number" step="0.01" name="amount" value="{{ bal.amount }}" 
+                               class="p-3 bg-slate-50 rounded-xl border-none outline-none text-sm font-bold" required>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button type="submit" class="flex-1 bg-slate-900 text-white p-3 rounded-xl text-xs font-bold">Update</button>
+                        <button type="button" onclick="toggleEdit('{{ bal.id }}')" class="flex-1 bg-slate-100 text-slate-500 p-3 rounded-xl text-xs font-bold">Cancel</button>
+                    </div>
+                </form>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleEdit(id) {
+        const viewDiv = document.getElementById(`view-${id}`);
+        const editForm = document.getElementById(`edit-${id}`);
+        
+        if (viewDiv.classList.contains('hidden')) {
+            viewDiv.classList.remove('hidden');
+            editForm.classList.add('hidden');
+        } else {
+            viewDiv.classList.add('hidden');
+            editForm.classList.remove('hidden');
+        }
+    }
+</script>
+{% endblock %}

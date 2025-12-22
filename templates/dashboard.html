@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="space-y-8 fade-in">
+    <div class="flex justify-between items-center">
+        <div>
+            <p class="text-slate-400 text-xs font-bold uppercase tracking-widest">Welcome back,</p>
+            <h1 class="text-2xl font-black text-slate-900">{{ session['username'] }}</h1>
+        </div>
+        <div class="flex space-x-2">
+            <a href="{{ url_for('add_balance') }}" class="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center text-xl border border-indigo-100 shadow-sm active:scale-95 transition-transform">🏦</a>
+            <a href="{{ url_for('add_debt') }}" class="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center text-xl border border-indigo-100 shadow-sm active:scale-95 transition-transform">🤝</a>
+            <a href="{{ url_for('tracking') }}" class="w-12 h-12 bg-indigo-50 rounded-2xl flex flex-col items-center justify-center border border-indigo-100 shadow-sm active:scale-95 transition-transform">
+                <span class="text-lg">📊</span>
+                <span class="text-[8px] font-black text-indigo-400 uppercase leading-none">Stats</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="btn-primary p-8 rounded-[35px] text-white shadow-2xl relative overflow-hidden">
+        <div class="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full"></div>
+        
+        <p class="text-indigo-100 text-xs font-bold uppercase tracking-wider">Net Worth</p>
+        <h2 class="text-4xl font-black mt-1">${{ "{:,.2f}".format(total_balance) }}</h2>
+        
+        {% if net_debt_balance != 0 %}
+        <div class="mt-2 flex items-center space-x-2">
+            <span class="text-[10px] font-bold py-1 px-2 rounded-lg bg-white/20">
+                {% if net_debt_balance > 0 %}
+                    ⚠️ You owe: ${{ "{:,.2f}".format(net_debt_balance|abs) }}
+                {% else %}
+                    ✅ Others owe you: ${{ "{:,.2f}".format(net_debt_balance|abs) }}
+                {% endif %}
+            </span>
+        </div>
+        {% endif %}
+
+        <div class="mt-8 grid grid-cols-2 gap-4">
+            <div class="bg-white/10 backdrop-blur-md p-3 rounded-2xl text-center">
+                <p class="text-[9px] uppercase font-bold text-indigo-200">Free to Use</p>
+                <p class="text-md font-bold">${{ "{:,.2f}".format(unallocated) }}</p>
+            </div>
+            <a href="{{ url_for('add_expense') }}" class="bg-white text-indigo-600 rounded-2xl flex items-center justify-center font-bold text-sm shadow-lg active:scale-95 transition-transform">+ Spend Now</a>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-3 gap-4">
+        <a href="{{ url_for('add_balance') }}" class="bg-white p-4 rounded-3xl border border-slate-100 text-center shadow-sm active:bg-slate-50 transition-colors">
+            <p class="text-xl">💰</p>
+            <p class="text-[10px] font-bold text-slate-500 uppercase mt-1">Accounts</p>
+        </a>
+        <a href="{{ url_for('add_category') }}" class="bg-white p-4 rounded-3xl border border-slate-100 text-center shadow-sm active:bg-slate-50 transition-colors">
+            <p class="text-xl">📁</p>
+            <p class="text-[10px] font-bold text-slate-500 uppercase mt-1">Budgets</p>
+        </a>
+        <a href="{{ url_for('add_debt') }}" class="bg-white p-4 rounded-3xl border border-slate-100 text-center shadow-sm active:bg-slate-50 transition-colors">
+            <p class="text-xl">🤝</p>
+            <p class="text-[10px] font-bold text-slate-500 uppercase mt-1">Debts</p>
+        </a>
+    </div>
+
+    <div class="space-y-4">
+        <h3 class="font-bold text-slate-800 text-sm uppercase tracking-wider ml-1">Monthly Summary</h3>
+        <div class="flex space-x-4 overflow-x-auto no-scrollbar pb-2">
+            {% for stat in monthly_stats %}
+            <div class="min-w-[130px] bg-slate-900 text-white p-5 rounded-[28px] shadow-lg">
+                <p class="text-[10px] text-slate-400 font-bold uppercase">{{ stat.month }}</p>
+                <p class="text-xl font-black mt-1">${{ "{:,.0f}".format(stat.total) }}</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="space-y-4">
+        <div class="flex justify-between items-center px-1">
+            <h3 class="font-bold text-slate-800 text-sm uppercase tracking-wider">Budgets</h3>
+            <a href="{{ url_for('add_category') }}" class="text-indigo-600 text-[10px] font-bold uppercase tracking-tighter">+ New Budget</a>
+        </div>
+        <div class="flex overflow-x-auto space-x-4 no-scrollbar pb-2">
+            {% for cat in categories %}
+            {% set percent = (cat.spent_amount / cat.allocated_amount * 100) if cat.allocated_amount > 0 else 0 %}
+            <div class="min-w-[160px] p-5 rounded-[24px] border-2 border-indigo-50 bg-indigo-50/30">
+                <p class="text-[10px] font-black uppercase text-indigo-500 truncate">{{ cat.name }}</p>
+                <div class="mt-1">
+                    <p class="text-lg font-bold text-slate-800">${{ "{:,.0f}".format(cat.spent_amount) }}</p>
+                    <p class="text-[10px] text-slate-400 font-medium">of ${{ "{:,.0f}".format(cat.allocated_amount) }}</p>
+                </div>
+                <div class="w-full bg-white/50 h-1.5 rounded-full mt-3 overflow-hidden">
+                    <div class="bg-indigo-600 h-full rounded-full transition-all duration-700" style="width: {{ percent if percent <= 100 else 100 }}%"></div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    {% if debts %}
+    <div class="space-y-4">
+        <div class="flex justify-between items-center px-1">
+            <h3 class="font-bold text-slate-800 text-sm uppercase tracking-wider">Lent & Borrowed</h3>
+            <a href="{{ url_for('add_debt') }}" class="text-indigo-600 text-[10px] font-bold uppercase tracking-tighter">+ Manage</a>
+        </div>
+        <div class="flex overflow-x-auto space-x-4 no-scrollbar pb-2">
+            {% for debt in debts %}
+            <div class="min-w-[160px] p-5 rounded-[24px] border-2 {% if debt.amount > 0 %}border-red-100 bg-red-50/50{% else %}border-emerald-100 bg-emerald-50/50{% endif %}">
+                <p class="text-[10px] font-black uppercase {% if debt.amount > 0 %}text-red-500{% else %}text-emerald-500{% endif %}">
+                    {{ 'You Owe' if debt.amount > 0 else 'Others Owe' }}
+                </p>
+                <p class="text-lg font-bold text-slate-800 mt-1">${{ "{:,.0f}".format(debt.amount|abs) }}</p>
+                <p class="text-xs text-slate-500 font-medium truncate">{{ debt.person_name }}</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="space-y-4 pb-24">
+        <div class="flex justify-between items-center px-1">
+            <h3 class="font-bold text-slate-800 text-sm uppercase tracking-wider">Recent Activity</h3>
+            <span class="text-[10px] text-slate-400 font-bold uppercase">Last 10</span>
+        </div>
+        {% for exp in expenses %}
+        <div class="flex items-center justify-between p-4 bg-white border border-slate-50 rounded-2xl shadow-sm">
+            <div class="flex items-center space-x-4">
+                <div class="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-lg">💸</div>
+                <div>
+                    <p class="font-bold text-slate-800 text-sm">{{ exp.description }}</p>
+                    <p class="text-[10px] text-slate-400 font-bold uppercase">{{ exp.cat_name }} • {{ exp.date[:10] }}</p>
+                </div>
+            </div>
+            <p class="font-black text-red-500">-${{ "{:,.2f}".format(exp.amount) }}</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

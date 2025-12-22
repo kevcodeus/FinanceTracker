@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="space-y-8 pb-24">
+    <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-4">
+            <a href="{{ url_for('index') }}" class="text-2xl text-slate-400">←</a>
+            <h1 class="text-2xl font-black text-slate-900">Financial Archive</h1>
+        </div>
+    </div>
+
+    <section class="space-y-3">
+        <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Yearly Reports</h3>
+        <div class="space-y-3">
+            {% for y in years %}
+            <a href="{{ url_for('year_detail', year=y.year) }}" class="block bg-white p-6 rounded-[30px] border border-slate-100 shadow-sm active:scale-95 transition-transform">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <p class="text-xs font-bold text-indigo-500 uppercase">Fiscal Year</p>
+                        <p class="text-xl font-black text-slate-800">{{ y.year }}</p>
+                    </div>
+                    <div class="w-10 h-10 bg-slate-50 rounded-full flex items-center justify-center text-slate-400">→</div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="space-y-3">
+        <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Monthly Archive</h3>
+        <div class="flex overflow-x-auto space-x-4 no-scrollbar pb-2">
+            {% for m in months %}
+            <a href="{{ url_for('month_detail', month_id=m.month_id) }}" class="min-w-[150px] bg-slate-900 p-6 rounded-[32px] text-white shadow-lg active:scale-95 transition-transform">
+                <p class="text-[10px] text-slate-400 font-black uppercase mb-1">Data for</p>
+                <p class="text-lg font-bold">{{ m.month_id }}</p>
+            </a>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="space-y-4">
+    <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Debt History</h3>
+    <div class="space-y-3">
+        {% for d in all_debts %}
+        <div class="bg-white p-5 rounded-[28px] border-l-[6px] shadow-sm flex justify-between items-center 
+            {% if d.amount > 0 %}border-red-500{% elif d.amount < 0 %}border-emerald-500{% else %}border-slate-200{% endif %}">
+            <div>
+                <p class="font-black text-slate-800 text-base">{{ d.person_name }}</p>
+                <p class="text-[10px] text-slate-400 font-bold uppercase">{{ d.date[:10] }}</p>
+                
+                {# If positive, you owe them. If negative, they owe you. #}
+                <span class="text-[9px] font-black px-2 py-0.5 rounded-full mt-1 inline-block
+                    {% if d.amount > 0 %}bg-red-50 text-red-500{% else %}bg-emerald-50 text-emerald-500{% endif %}">
+                    {% if d.amount > 0 %}PAY THEM BACK{% else %}MONEY TO RECEIVE{% endif %}
+                </span>
+            </div>
+            <div class="text-right">
+                <p class="text-lg font-black text-slate-900">${{ "{:,.2f}".format(d.amount|abs) }}</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+</div>
+{% endblock %}

@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+    /* Aggressive override to kill the white background */
+    html, body { 
+        background-color: #0b121f !important; 
+    }
+    
+    /* Ensure the main wrapper and content also follow the dark theme */
+    main, .max-w-md {
+        background-color: #0b121f !important;
+        color: white !important;
+    }
+
+    .amount-input { width: 1ch; min-width: 1ch; transition: width 0.05s ease; }
+    
+    .custom-select {
+        background-color: #1a2332; 
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 1rem;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='white'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 1rem center;
+        background-size: 1.2em;
+        color: white;
+    }
+
+    .dial-btn {
+        height: 3.2rem;
+        font-size: 1.8rem;
+        font-weight: 500;
+        color: white;
+        border-radius: 9999px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .dial-btn:active { background: rgba(255, 255, 255, 0.1); }
+
+    /* Force the navigation bar to match this dark theme */
+    nav.app-nav, nav.fixed {
+        background: rgba(11, 18, 31, 0.9) !important;
+        backdrop-filter: blur(12px) !important;
+        border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+    }
+
+    
+    nav a { color: #94a3b8 !important; } /* Dim non-active nav icons */
+
+
+    .pt-6 {
+    padding-top: .3rem;
+}
+.pt-1 {
+    padding-top: 1rem;
+}
+
+.gap-1 {
+    gap: 1.1rem;
+}
+
+</style>
+
+<div class="flex flex-col px-6 text-white min-h-[80vh]">
+    <div class="py-2 flex justify-between items-center mt-2">
+        <a href="{{ url_for('index') }}" class="text-white/60">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        </a>
+        <p class="text-[10px] font-black uppercase tracking-widest text-slate-500">Add Expense</p>
+        <div class="w-7"></div>
+    </div>
+
+    <form action="{{ url_for('add_expense') }}" method="POST" class="space-y-2">
+        <div class="flex flex-col items-center justify-center pt-1">
+            <div class="flex items-baseline justify-center">
+                <span class="text-[#5d58f0] text-3xl font-black mr-2">₹</span>
+                <input type="number" step="0.01" name="amount" id="numDisplay" 
+                       class="amount-input bg-transparent text-white text-7xl font-semibold outline-none pointer-events-none" 
+                       placeholder="0" required readonly>
+            </div>
+            <button type="button" id="addNoteBtn" onclick="showNoteInput()" 
+                    class="mt-1 text-slate-400 font-medium text-xs bg-white/5 px-4 py-1.5 rounded-full border border-white/10">
+                + Add Note
+            </button>
+            <input type="text" name="description" id="noteInput" placeholder="What for?" 
+                   class="hidden bg-transparent text-[#5d58f0] text-center outline-none font-bold text-lg w-full border-b border-[#5d58f0]/30 pb-1 mt-1">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 pt-1">
+            <div class="space-y-1">
+                <label class="text-[9px] font-bold text-slate-500 uppercase ml-2">Category</label>
+                <select name="category_id" class="custom-select w-full p-3 font-semibold text-sm outline-none" required>
+                    <option value="" disabled selected>Budget</option>
+                    {% for cat in categories %}<option value="{{ cat.id }}">{{ cat.name }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="space-y-1">
+                <label class="text-[9px] font-bold text-slate-500 uppercase ml-2">From Account</label>
+                <select name="balance_id" class="custom-select w-full p-3 font-semibold text-sm outline-none" required>
+                    {% for bal in balances %}<option value="{{ bal.id }}">{{ bal.account_name }}</option>{% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-1 pt-1">
+            {% for i in range(1, 10) %}<button type="button" onclick="pressNum('{{i}}')" class="dial-btn">{{i}}</button>{% endfor %}
+            <button type="button" onclick="pressNum('.')" class="dial-btn">.</button>
+            <button type="button" onclick="pressNum('0')" class="dial-btn">0</button>
+            <button type="button" onclick="clearNum()" class="dial-btn text-slate-500">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
+            </button>
+        </div>
+
+        <div class="pt-6">
+            <button type="submit" class="w-full bg-[#5d58f0] text-white p-4 rounded-2xl font-bold text-lg active:scale-95 transition-transform shadow-xl shadow-[#5d58f0]/20">
+                Transfer
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+    let currentAmount = "";
+    const display = document.getElementById('numDisplay');
+    function pressNum(num) {
+        if (num === '.' && currentAmount.includes('.')) return;
+        if (currentAmount.length >= 8) return;
+        currentAmount += num;
+        updateUI();
+    }
+    function clearNum() {
+        currentAmount = currentAmount.slice(0, -1);
+        updateUI();
+    }
+    function updateUI() {
+        const val = currentAmount || "0";
+        display.value = val;
+        display.style.width = val.length + "ch";
+    }
+    function showNoteInput() {
+        document.getElementById('addNoteBtn').classList.add('hidden');
+        const input = document.getElementById('noteInput');
+        input.classList.remove('hidden');
+        input.focus();
+    }
+    updateUI();
+</script>
+{% endblock %}
