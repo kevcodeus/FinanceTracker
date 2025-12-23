@@ -187,6 +187,39 @@ def add_category():
     categories = db.execute('SELECT * FROM categories WHERE user_id = ?', (uid,)).fetchall()
     return render_template('add_category.html', categories=categories)
 
+
+# --- EDIT CATEGORY ---
+@app.route('/edit_category/<int:id>', methods=['POST'])
+@login_required
+def edit_category(id):
+    db = get_db()
+    uid = session['user_id']
+    new_name = request.form.get('name')
+    new_allocation = request.form.get('amount')
+    
+    # Update category only if it belongs to the logged-in user
+    db.execute('UPDATE categories SET name = ?, allocated_amount = ? WHERE id = ? AND user_id = ?', 
+               (new_name, float(new_allocation), id, uid))
+    db.commit()
+    flash("Category updated!")
+    return redirect(url_for('add_category'))
+
+# --- DELETE CATEGORY ---
+@app.route('/delete_category/<int:id>', methods=['POST'])
+@login_required
+def delete_category(id):
+    db = get_db()
+    uid = session['user_id']
+    
+    # Warning: Deleting a category might leave expenses "orphaned" 
+    # unless you delete them or reassign them. 
+    db.execute('DELETE FROM categories WHERE id = ? AND user_id = ?', (id, uid))
+    db.commit()
+    flash("Category deleted.")
+    return redirect(url_for('add_category'))
+
+
+
 @app.route('/add_debt', methods=['GET', 'POST'])
 @login_required
 def add_debt():
